@@ -480,9 +480,6 @@ public class Master {
         }
 
         public void sendCommand(final String command, final ServerRunnable serverRunnable) {
-            while(!serverConnected) {
-
-            }
 
             serverRunnables.add(serverRunnable);
 
@@ -490,6 +487,9 @@ public class Master {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    while(!serverConnected) {
+                        Master.log("SERVER NOT CONNECTED");
+                    }
                     try {
                         output.writeObject(serverRunnable.REQUEST_CODE + "#divider#" + command);
                         output.flush();
