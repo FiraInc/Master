@@ -11,6 +11,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Environment;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
@@ -21,8 +22,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
 
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -31,11 +35,16 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.SyncFailedException;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import static android.content.ContentValues.TAG;
 
@@ -249,12 +258,12 @@ public class Master {
         static ArrayList<timeTrackerElement> timeElements = new ArrayList<>();
 
         public static void start (@NonNull String name) {
-            if (name.isEmpty()) {
+            if (!name.isEmpty()) {
                 timeTrackerElement trackerElement = new timeTrackerElement(name);
                 trackerElement.timeInMillis = System.currentTimeMillis();
                 timeElements.add(trackerElement);
             }else {
-                Master.log("Error counting time");
+                Master.log("Error: timetracker name can't be empty");
             }
         }
 
@@ -366,6 +375,152 @@ public class Master {
             return true;
         } catch (PackageManager.NameNotFoundException e) {
             return false;
+        }
+    }
+
+    public static class ServerManager {
+
+        private Socket connection;
+        private ObjectInputStream input;
+        private ObjectOutputStream output;
+
+        private ArrayList<ServerRunnable> serverRunnables;
+
+        String serverIP = "";
+
+        public Boolean serverConnected = false;
+
+        public ServerManager () {
+
+        }
+
+        public void connectToServer(String serverIP) {
+            if (this.serverIP.equals("") && !serverConnected) {
+                this.serverIP = serverIP;
+                serverRunnables = new ArrayList<>();
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            startConnection();
+                            setupStream();
+                            serverConnected = true;
+                            whileChatting();
+                        } catch (EOFException eofException) {
+                            serverConnected = false;
+                            showMessage("Terminated connection to server!");
+                        } catch (IOException ioException) {
+                            serverConnected = false;
+                            ioException.printStackTrace();
+                        } finally {
+                            serverConnected = false;
+                            closeConnection();
+                        }
+                    }
+                });
+                thread.start();
+            }else {
+                showMessage("Already connected to a server!");
+            }
+        }
+
+        private void startConnection() throws IOException{
+            showMessage("Attempting to connect...");
+            connection = new Socket(InetAddress.getByName(serverIP), 6789);
+            showMessage("Connected to: " + connection.getInetAddress().getHostName());
+        }
+
+        private void setupStream() throws IOException {
+            output = new ObjectOutputStream(connection.getOutputStream());
+            output.flush();
+            input = new ObjectInputStream(connection.getInputStream());
+            showMessage("Streams have been setup");
+        }
+
+        private void whileChatting() throws IOException {
+            do{
+                try {
+                    showMessage("Received Answer");
+                    String unformattedAnswer = (String) input.readObject();
+                    String[] splittedAnswer = unformattedAnswer.split("#divider#");
+
+                    String req = splittedAnswer[0];
+                    String answer = splittedAnswer[1];
+
+                    showMessage("Serveranswer: " + unformattedAnswer);
+
+                    for (int i = 0; i < serverRunnables.size(); i++) {
+                        if (serverRunnables.get(i).REQUEST_CODE.equals(req)) {
+                            serverRunnables.get(i).serverAnswer = answer;
+                            serverRunnables.get(i).afterAnswer.run();
+                            serverRunnables.remove(i);
+                            //TODO HERE WE GO
+                        }
+                    }
+
+                }catch (ClassNotFoundException classNotFoundException) {
+                    showMessage("Server sent unknown object");
+                }
+            }while (serverConnected);
+        }
+
+        public void closeConnection() {
+            showMessage("Closing connection...");
+            if (output != null) {
+                try {
+                    output.close();
+                    input.close();
+                    connection.close();
+                    serverIP = "";
+                    serverConnected = false;
+                }catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+        }
+
+        public void sendCommand(final String command, final ServerRunnable serverRunnable) {
+            while(!serverConnected) {
+
+            }
+
+            serverRunnables.add(serverRunnable);
+
+            showMessage("Attempting to send command...");
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        output.writeObject(serverRunnable.REQUEST_CODE + "#divider#" + command);
+                        output.flush();
+                        showMessage("Command sent!");
+                    }catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                }
+            });
+            thread.start();
+        }
+
+        private void showMessage(String message) {
+            Master.log("MasterSever: " + message);
+        }
+
+        public static class ServerRunnable {
+
+            public String serverAnswer;
+            public String REQUEST_CODE;
+            public Runnable afterAnswer;
+
+            public ServerRunnable(String REQUEST_CODE) {
+                this.afterAnswer = afterAnswer;
+                this.REQUEST_CODE = REQUEST_CODE;
+            }
+
+            public void addRunnable(Runnable afterAnswer) {
+                this.afterAnswer = afterAnswer;
+            }
+
         }
     }
 }
