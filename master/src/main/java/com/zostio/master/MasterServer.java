@@ -176,26 +176,7 @@ public class MasterServer {
         Master.log("MasterSever: " + message);
     }
 
-    public void login(Activity activity, String username, String password, final Runnable successLogin, final Runnable failedLogin) {
-        final ServerRunnable serverRunnable = new ServerRunnable(activity, "LOGINREQ");
-        serverRunnable.onSuccess = new Runnable() {
-            @Override
-            public void run() {
-                if (successLogin != null) {
-                    successLogin.run();
-                }
-            }
-        };
-
-        serverRunnable.onError = new Runnable() {
-            @Override
-            public void run() {
-                if (failedLogin != null) {
-                    failedLogin.run();
-                }
-            }
-        };
-
+    public void login(String username, String password, final ServerRunnable serverRunnable) {
         sendCommand("login",username+"#loginfo;"+password, serverRunnable);
     }
 
