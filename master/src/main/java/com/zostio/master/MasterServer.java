@@ -52,8 +52,8 @@ public class MasterServer {
                         showMessage("Terminated connection to server!");
                     } catch (IOException ioException) {
                         serverConnected = false;
-                        if (serverRunnable != null && serverRunnable.serverAnswer != null) {
-                            serverRunnable.serverAnswer = ioException.getMessage();
+                        if (serverRunnable != null) {
+                            serverRunnable.serverAnswer = ioException.getLocalizedMessage();
                         }
                         if (serverRunnable != null && serverRunnable.onError != null) {
                             serverRunnable.activity.runOnUiThread(serverRunnable.onError);
