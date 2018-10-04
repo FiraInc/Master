@@ -89,6 +89,10 @@ public class MasterServer {
             try {
                 showMessage("Received Answer");
                 String unformattedAnswer = (String) input.readObject();
+                if (unformattedAnswer.toLowerCase().equals("server - close")) {
+                    closeConnection();
+                    return;
+                }
                 String[] splittedAnswer = unformattedAnswer.split("#divider#");
 
                 String req = splittedAnswer[0];
