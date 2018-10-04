@@ -43,7 +43,7 @@ public class MasterServer {
                         startConnection();
                         setupStream();
                         serverConnected = true;
-                        if (serverRunnable.onSuccess != null) {
+                        if (serverRunnable != null && serverRunnable.onSuccess != null) {
                             serverRunnable.onSuccess.run();
                         }
                         whileChatting();
@@ -52,8 +52,12 @@ public class MasterServer {
                         showMessage("Terminated connection to server!");
                     } catch (IOException ioException) {
                         serverConnected = false;
-                        serverRunnable.serverAnswer = ioException.getMessage();
-                        serverRunnable.activity.runOnUiThread(serverRunnable.onError);
+                        if (serverRunnable != null && serverRunnable.serverAnswer != null) {
+                            serverRunnable.serverAnswer = ioException.getMessage();
+                        }
+                        if (serverRunnable != null && serverRunnable.onError != null) {
+                            serverRunnable.activity.runOnUiThread(serverRunnable.onError);
+                        }
                         ioException.printStackTrace();
                     } finally {
                         serverConnected = false;
