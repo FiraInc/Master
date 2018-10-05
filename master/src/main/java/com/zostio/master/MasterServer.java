@@ -2,9 +2,11 @@ package com.zostio.master;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.io.EOFException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -24,8 +26,10 @@ public class MasterServer {
 
     public Boolean serverConnected = false;
 
-    public MasterServer () {
+    Context context;
 
+    public MasterServer (Context context) {
+        this.context = context;
     }
 
     public void connectToServer(String serverIP) {
@@ -85,10 +89,15 @@ public class MasterServer {
     }
 
     private void whileChatting() throws IOException {
-        do{
+        do {
             try {
                 showMessage("Received Answer");
+
+                showMessage("String");
+                showMessage("RUNNING");
+
                 String unformattedAnswer = (String) input.readObject();
+
                 if (unformattedAnswer.toLowerCase().equals("server - close")) {
                     closeConnection();
                     return;
@@ -125,10 +134,17 @@ public class MasterServer {
                         }
                     }
                 }
-            }catch (ClassNotFoundException classNotFoundException) {
+                /*
+                showMessage("Byte");
+                byte[] b = new byte[20002];
+                FileOutputStream fr = new FileOutputStream(context.getFilesDir() + "testmeg.txt");
+                input.read(b, 0, b.length);
+                fr.write(b, 0, b.length);
+                */
+            } catch (ClassNotFoundException classNotFoundException) {
                 showMessage("Server sent unknown object");
             }
-        }while (serverConnected);
+        } while (serverConnected);
     }
 
     private void closeConnection() {
@@ -151,7 +167,7 @@ public class MasterServer {
     public void sendCommand(String command, final String details, final ServerRunnable serverRunnable) {
         serverRunnables.add(serverRunnable);
 
-        showMessage("Attempting to send command...");
+        showMessage("Attempting to send command: " + command + "#prog#" + details);
 
         final String commandToSend = command + "#prog#" +details;
         Thread thread = new Thread(new Runnable() {
@@ -184,8 +200,23 @@ public class MasterServer {
         Master.log("MasterSever: " + message);
     }
 
-    public void login(String username, String password, final ServerRunnable serverRunnable) {
-        sendCommand("login",username+"#loginfo;"+password, serverRunnable);
+    public void login(final String username, final String password, final ServerRunnable serverRunnable) {
+        final ServerRunnable runnable = new ServerRunnable(serverRunnable.activity, "saltReq");
+        runnable.onSuccess = new Runnable() {
+            @Override
+            public void run() {
+                MasterCrypto masterCrypto = new MasterCrypto();
+                String hashedPass = masterCrypto.generateHash(password, runnable.serverAnswer);
+                sendCommand("login",username+"#loginfo;"+hashedPass, serverRunnable);
+            }
+        };
+        runnable.onError = new Runnable() {
+            @Override
+            public void run() {
+                serverRunnable.onError.run();
+            }
+        };
+        sendCommand("getusersalt",username, runnable);
     }
 
     public static class ServerRunnable {
