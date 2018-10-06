@@ -26,19 +26,15 @@ public class MasterServerHandler {
     private InputStream inputFile;
     private ObjectOutputStream output;
 
-    private ArrayList<ServerRunnable> serverRunnables;
-
-    static String serverIP = "";
-
-    public Boolean serverConnected = false;
+    private ArrayList<MasterServer.ServerRunnable> serverRunnables;
 
     MasterServerHandler() {
 
     }
 
-    public void connectToServer(String IP, final ServerRunnable serverRunnable) {
-        if (serverIP.equals("") && !serverConnected) {
-            serverIP = IP;
+    public void connectToServer(String IP, final MasterServer.ServerRunnable serverRunnable) {
+        if (MasterServer.serverIP.equals("") && !MasterServer.serverConnected) {
+            MasterServer.serverIP = IP;
             serverRunnables = new ArrayList<>();
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -46,16 +42,16 @@ public class MasterServerHandler {
                     try {
                         startConnection();
                         setupStream();
-                        serverConnected = true;
-                        if (serverRunnable != null && serverRunnable.onSuccess != null) {
+                        MasterServer.serverConnected = true;
+                        if (serverRunnables != null && serverRunnable.onSuccess != null) {
                             serverRunnable.onSuccess.run();
                         }
                         whileChatting();
                     } catch (EOFException eofException) {
-                        serverConnected = false;
+                        MasterServer.serverConnected = false;
                         showMessage("Terminated connection to server!");
                     } catch (IOException ioException) {
-                        serverConnected = false;
+                        MasterServer.serverConnected = false;
                         if (serverRunnable != null) {
                             serverRunnable.serverAnswer = ioException.getLocalizedMessage();
                         }
@@ -64,7 +60,7 @@ public class MasterServerHandler {
                         }
                         ioException.printStackTrace();
                     } finally {
-                        serverConnected = false;
+                        MasterServer.serverConnected = false;
                         closeConnection();
                     }
                 }
@@ -77,7 +73,7 @@ public class MasterServerHandler {
 
     public void startConnection() throws IOException{
         showMessage("Attempting to connect...");
-        connection = new Socket(InetAddress.getByName(serverIP), 6789);
+        connection = new Socket(InetAddress.getByName(MasterServer.serverIP), 6789);
         showMessage("Connected to: " + connection.getInetAddress().getHostName());
     }
 
@@ -115,7 +111,7 @@ public class MasterServerHandler {
                     }
 
                     for (int i = 0; i < serverRunnables.size(); i++) {
-                        ServerRunnable serverRunnable = serverRunnables.get(i);
+                        MasterServer.ServerRunnable serverRunnable = serverRunnables.get(i);
                         if (serverRunnable.REQUEST_CODE.equals(req)) {
                             if (answer.toLowerCase().startsWith("error: ")) {
                                 serverRunnable.serverAnswer = answer.toLowerCase().split("error: ")[1];
@@ -143,7 +139,7 @@ public class MasterServerHandler {
             } catch (ClassNotFoundException classNotFoundException) {
                 showMessage("Server sent unknown object");
             }
-        } while (serverConnected);
+        } while (MasterServer.serverConnected);
     }
 
     public void closeConnection() {
@@ -158,15 +154,15 @@ public class MasterServerHandler {
                     inputFile.close();
                 }
                 connection.close();
-                serverIP = "";
-                serverConnected = false;
+                MasterServer.serverIP = "";
+                MasterServer.serverConnected = false;
             }catch (IOException ioException) {
                 ioException.printStackTrace();
             }
         }
     }
 
-    public void sendCommand(String program, String command, final String details, final ServerRunnable serverRunnable) {
+    public void sendCommand(String program, String command, final String details, final MasterServer.ServerRunnable serverRunnable) {
         serverRunnables.add(serverRunnable);
 
         String commandToSend = program + "#divider#" + command;
@@ -182,7 +178,7 @@ public class MasterServerHandler {
             @Override
             public void run() {
                 Boolean serverNotConnectedWarning = false;
-                while(!serverConnected) {
+                while(!MasterServer.serverConnected) {
                     if (!serverNotConnectedWarning) {
                         showMessage("Server not connected!");
                         serverNotConnectedWarning = true;
@@ -200,8 +196,8 @@ public class MasterServerHandler {
         thread.start();
     }
 
-    public void uploadFile(final String startPath, final String endPath, final ServerRunnable serverRunnable) {
-        ServerRunnable runnable = new ServerRunnable(serverRunnable.activity, "SENDFILE");
+    public void uploadFile(final String startPath, final String endPath, final MasterServer.ServerRunnable serverRunnable) {
+        MasterServer.ServerRunnable runnable = new MasterServer.ServerRunnable(serverRunnable.activity, "SENDFILE");
         runnable.onSuccess = new Runnable() {
             @Override
             public void run() {
@@ -210,7 +206,7 @@ public class MasterServerHandler {
                     @Override
                     public void run() {
                         Boolean serverNotConnectedWarning = false;
-                        while(!serverConnected) {
+                        while(!MasterServer.serverConnected) {
                             if (!serverNotConnectedWarning) {
                                 showMessage("Server not connected!");
                                 serverNotConnectedWarning = true;
@@ -246,8 +242,8 @@ public class MasterServerHandler {
         Master.log("MasterSever: " + message);
     }
 
-    public void login(final String username, final String password, final ServerRunnable serverRunnable) {
-        final ServerRunnable runnable = new ServerRunnable(serverRunnable.activity, "saltReq");
+    public void login(final String username, final String password, final MasterServer.ServerRunnable serverRunnable) {
+        final MasterServer.ServerRunnable runnable = new MasterServer.ServerRunnable(serverRunnable.activity, "saltReq");
         runnable.onSuccess = new Runnable() {
             @Override
             public void run() {
@@ -263,36 +259,5 @@ public class MasterServerHandler {
             }
         };
         sendCommand("usermanager","getusersalt", username, runnable);
-    }
-
-    public static class ServerRunnable {
-
-        public String serverAnswer;
-        public String REQUEST_CODE;
-        public Runnable onSuccess;
-        public Runnable onError;
-        Activity activity;
-
-        public ServerRunnable(Activity activity, String request) {
-            this.activity = activity;
-            Random random = new Random();
-            REQUEST_CODE = request + String.valueOf(random.nextInt(100000) + random.nextInt(100000));
-        }
-
-        public ServerRunnable(Activity activity, String REQUEST_CODE, Runnable onSuccess, Runnable onError) {
-            this.activity = activity;
-            this.REQUEST_CODE = REQUEST_CODE;
-            this.onSuccess = onSuccess;
-            this.onError = onError;
-        }
-
-        public void addOnSuccess(Runnable onSuccess) {
-            this.onSuccess = onSuccess;
-        }
-
-        public void addOnError(Runnable onError) {
-            this.onError = onError;
-        }
-
     }
 }
