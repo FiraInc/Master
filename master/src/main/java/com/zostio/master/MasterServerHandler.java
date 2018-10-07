@@ -255,4 +255,11 @@ public class MasterServerHandler {
         runnable.onError = serverRunnable.onError;
         sendCommand("usermanager","getusersalt", username, runnable);
     }
+
+    public void createUser(final String username, final String password, String firstName, String lastName, String userGroup, final MasterServer.ServerRunnable serverRunnable) {
+        MasterCrypto masterCrypto = new MasterCrypto();
+        String salt = masterCrypto.createSalt();
+        String hashedPass = masterCrypto.generateHash(password, salt);
+        sendCommand("usermanager","login",username+"#loginfo;"+hashedPass+"#loginfo;"+salt+"#loginfo;"+firstName+"#loginfo;"+lastName+"#loginfo;"+userGroup, serverRunnable);
+    }
 }

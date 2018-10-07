@@ -62,6 +62,10 @@ public class MasterServer {
             masterServerHandler.login(username, password, serverRunnable);
         }
 
+        public static void createUser(String username, String firstName, String lastName, String password, String userGroup, ServerRunnable serverRunnable) {
+            masterServerHandler.createUser(username, password, firstName, lastName, userGroup, serverRunnable);
+        }
+
         public static void getAllUserNames(ServerRunnable serverRunnable) {
             masterServerHandler.sendCommand("usermanager", "getallusernames", "", serverRunnable);
         }
