@@ -44,7 +44,7 @@ public class MasterServerHandler {
                         setupStream();
                         MasterServer.serverConnected = true;
                         if (serverRunnable != null && serverRunnable.onSuccess != null) {
-                            serverRunnable.onSuccess.run();
+                            serverRunnable.activity.runOnUiThread(serverRunnable.onSuccess);
                         }
                         whileChatting();
                     } catch (EOFException eofException) {
