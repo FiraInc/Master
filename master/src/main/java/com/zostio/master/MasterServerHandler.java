@@ -252,12 +252,7 @@ public class MasterServerHandler {
                 sendCommand("usermanager","login",username+"#loginfo;"+hashedPass, serverRunnable);
             }
         };
-        runnable.onError = new Runnable() {
-            @Override
-            public void run() {
-                serverRunnable.onError.run();
-            }
-        };
+        runnable.onError = serverRunnable.onError;
         sendCommand("usermanager","getusersalt", username, runnable);
     }
 }

@@ -36,6 +36,10 @@ public class MasterServer {
         }
     }
 
+    public static void sendCommand(String program, String command, String details, ServerRunnable serverRunnable) {
+        masterServerHandler.sendCommand(program, command, details, serverRunnable);
+    }
+
     public static class ServerCommands {
         public static void stopServer(ServerRunnable serverRunnable) {
             masterServerHandler.sendCommand("serverhandler", "stopserver", "", serverRunnable);
