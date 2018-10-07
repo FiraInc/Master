@@ -260,6 +260,6 @@ public class MasterServerHandler {
         MasterCrypto masterCrypto = new MasterCrypto();
         String salt = masterCrypto.createSalt();
         String hashedPass = masterCrypto.generateHash(password, salt);
-        sendCommand("usermanager","login",username+"#loginfo;"+hashedPass+"#loginfo;"+salt+"#loginfo;"+firstName+"#loginfo;"+lastName+"#loginfo;"+userGroup, serverRunnable);
+        sendCommand("usermanager","createuser",username+"#loginfo;"+hashedPass+"#loginfo;"+salt+"#loginfo;"+firstName+"#loginfo;"+lastName+"#loginfo;"+userGroup, serverRunnable);
     }
 }
