@@ -43,7 +43,7 @@ public class MasterServerHandler {
                         startConnection();
                         setupStream();
                         MasterServer.serverConnected = true;
-                        if (serverRunnables != null && serverRunnable.onSuccess != null) {
+                        if (serverRunnable != null && serverRunnable.onSuccess != null) {
                             serverRunnable.onSuccess.run();
                         }
                         whileChatting();
