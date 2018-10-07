@@ -90,9 +90,74 @@ public class MasterServer {
         }
     }
 
+    public static class DatabaseManager {
+        String databasePath;
+
+        public DatabaseManager(String databasePath, String databaseName) {
+            this.databasePath = fixedPath(databasePath, databaseName);
+        }
+
+        public void createDatabase(String databasePath, String databaseName, ServerRunnable serverRunnable) {
+            this.databasePath = fixedPath(databasePath, databaseName);
+            masterServerHandler.sendCommand("databasemanager", "createdatabase", this.databasePath, serverRunnable);
+        }
+
+        public DatabaseReference getReference(String key) {
+            return new DatabaseReference(databasePath, key);
+        }
+
+        private String fixedPath(String path, String databaseName) {
+            String realPath = path;
+
+            if (!databaseName.endsWith(".json")) {
+                databaseName = databaseName + ".json";
+            }
+
+            if (path.endsWith("/")) {
+                realPath = realPath + databaseName;
+            }else {
+                realPath = realPath + "/" + databaseName;
+            }
+
+            return realPath;
+        }
+    }
+
+    public static class DatabaseReference {
+
+        String databasePath;
+        String path;
+
+        DatabaseReference(String databasePath, String path) {
+            this.databasePath = databasePath;
+            this.path = path;
+        }
+        public DatabaseReference getChild(String key) {
+            if (path.isEmpty()) {
+                return new DatabaseReference(databasePath, key);
+            }else {
+                return new DatabaseReference(databasePath, path + "/" + key);
+            }
+
+        }
+
+        public void getValue(ServerRunnable serverRunnable) {
+            masterServerHandler.sendCommand("databasemanager", "getvalue", databasePath + "#newInfo;" + path, serverRunnable);
+        }
+
+        public void setValue(String value, ServerRunnable serverRunnable) {
+            String details = databasePath + "#newInfo;" + path + "#newInfo;" + value;
+            masterServerHandler.sendCommand("databasemanager", "setvalue", details, serverRunnable);
+        }
+
+        public void listChilds(ServerRunnable serverRunnable) {
+            String details = databasePath + "#newInfo;" + path;
+            masterServerHandler.sendCommand("databasemanager", "getallkeys", details, serverRunnable);
+        }
+    }
+
 
     public static class ServerRunnable {
-
         public String serverAnswer;
         public String REQUEST_CODE;
         public Runnable onSuccess;

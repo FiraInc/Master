@@ -33,7 +33,7 @@ public class MasterServerHandler {
     }
 
     public void connectToServer(String IP, final MasterServer.ServerRunnable serverRunnable) {
-        if (MasterServer.serverIP.equals("") && !MasterServer.serverConnected) {
+        if (!MasterServer.serverConnected) {
             MasterServer.serverIP = IP;
             serverRunnables = new ArrayList<>();
             Thread thread = new Thread(new Runnable() {
@@ -49,7 +49,7 @@ public class MasterServerHandler {
                         whileChatting();
                     } catch (EOFException eofException) {
                         MasterServer.serverConnected = false;
-                        showMessage("Terminated connection to server!");
+                        showMessage("Error: Terminated connection to server!");
                     } catch (IOException ioException) {
                         MasterServer.serverConnected = false;
                         if (serverRunnable != null) {
@@ -67,7 +67,7 @@ public class MasterServerHandler {
             });
             thread.start();
         }else {
-            showMessage("Already connected to a server!");
+            showMessage("Error: Already connected to a server!");
         }
     }
 
@@ -97,6 +97,7 @@ public class MasterServerHandler {
 
                 String unformattedAnswer = (String) input.readObject();
                 showMessage("Serveranswer: " + unformattedAnswer);
+
                 String[] splittedAnswer = unformattedAnswer.split("#divider#");
 
                 String req = splittedAnswer[0];
