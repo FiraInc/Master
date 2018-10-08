@@ -51,6 +51,7 @@ public class MasterServerHandler {
                         Thread thread = new Thread(new Runnable() {
                             @Override
                             public void run() {
+                                commands = new ArrayList<>();
                                 commandSender();
                             }
                         });
