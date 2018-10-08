@@ -212,7 +212,20 @@ public class MasterServerHandler {
         allSent = true;
     }
 
+    private Handler commandHandler;
+    private Runnable commandRunnable;
+
     private void commandLooper() {
+        if (commandHandler == null) {
+            commandHandler = new Handler();
+            commandRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    commandLooper();
+                }
+            };
+        }
+
         if (allSent && MasterServer.serverConnected) {
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -223,13 +236,10 @@ public class MasterServerHandler {
             });
             thread.start();
         }
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                commandLooper();
-            }
-        }, 1000);
+
+        if (MasterServer.serverConnected) {
+            commandHandler.postDelayed(commandRunnable, 50);
+        }
     }
 
     public void uploadFile(final String startPath, final String endPath, final MasterServer.ServerRunnable serverRunnable) {
