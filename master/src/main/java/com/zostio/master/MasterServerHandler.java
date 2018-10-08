@@ -237,9 +237,7 @@ public class MasterServerHandler {
             thread.start();
         }
 
-        if (MasterServer.serverConnected) {
-            commandHandler.postDelayed(commandRunnable, 50);
-        }
+        commandHandler.postDelayed(commandRunnable, 50);
     }
 
     public void uploadFile(final String startPath, final String endPath, final MasterServer.ServerRunnable serverRunnable) {
