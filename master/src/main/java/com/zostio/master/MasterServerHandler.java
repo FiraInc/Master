@@ -3,6 +3,7 @@ package com.zostio.master;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -27,6 +28,7 @@ public class MasterServerHandler {
     private ObjectOutputStream output;
 
     private ArrayList<MasterServer.ServerRunnable> serverRunnables;
+    private ArrayList<Command> commands;
 
     MasterServerHandler() {
 
@@ -46,6 +48,14 @@ public class MasterServerHandler {
                         if (serverRunnable != null && serverRunnable.onSuccess != null) {
                             serverRunnable.activity.runOnUiThread(serverRunnable.onSuccess);
                         }
+                        Thread thread = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                commandSender();
+                            }
+                        });
+                        thread.start();
+
                         whileChatting();
                     } catch (EOFException eofException) {
                         MasterServer.serverConnected = false;
@@ -132,7 +142,7 @@ public class MasterServerHandler {
                             serverRunnables.remove(i);
                         }else {
                             if (i == serverRunnables.size()-1) {
-                                showMessage("Request not found");
+                                showMessage("Request not found: " + req);
                             }
                         }
                     }
@@ -167,34 +177,45 @@ public class MasterServerHandler {
         serverRunnables.add(serverRunnable);
 
         String commandToSend = program + "#divider#" + command;
-
         if (details != null) {
             commandToSend = commandToSend + "#divider#" + details;
         }
-
         showMessage("Attempting to send command: " + commandToSend);
 
-        final String finalCommandToSend = commandToSend;
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Boolean serverNotConnectedWarning = false;
-                while(!MasterServer.serverConnected) {
-                    if (!serverNotConnectedWarning) {
-                        showMessage("Server not connected!");
-                        serverNotConnectedWarning = true;
-                    }
-                }
-                try {
-                    output.writeObject(serverRunnable.REQUEST_CODE + "#divider#" + finalCommandToSend);
-                    output.flush();
-                    showMessage("Command sent!");
-                }catch (IOException ioException) {
-                    ioException.printStackTrace();
+        Command commandClass = new Command();
+        commandClass.program = program;
+        commandClass.command = commandToSend;
+        commandClass.serverRunnable = serverRunnable;
+        commands.add(commandClass);
+    }
+
+    private void commandSender() {
+        for (int i = 0; i < commands.size(); i++) {
+            Command currentCommand = commands.get(i);
+            Boolean serverNotConnectedWarning = false;
+            while(!MasterServer.serverConnected) {
+                if (!serverNotConnectedWarning) {
+                    showMessage("Server not connected!");
+                    serverNotConnectedWarning = true;
                 }
             }
-        });
-        thread.start();
+            try {
+                output.writeObject(currentCommand.serverRunnable.REQUEST_CODE + "#divider#" + currentCommand.command);
+                output.flush();
+                showMessage("Command sent!");
+            }catch (IOException ioException) {
+                showMessage("Error sending command: " + currentCommand.command);
+                ioException.printStackTrace();
+            }
+            commands.remove(currentCommand);
+        }
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                commandSender();
+            }
+        }, 1000);
     }
 
     public void uploadFile(final String startPath, final String endPath, final MasterServer.ServerRunnable serverRunnable) {
@@ -262,5 +283,11 @@ public class MasterServerHandler {
         String salt = masterCrypto.createSalt();
         String hashedPass = masterCrypto.generateHash(password, salt);
         sendCommand("usermanager","createuser",username+"#loginfo;"+hashedPass+"#loginfo;"+salt+"#loginfo;"+firstName+"#loginfo;"+lastName+"#loginfo;"+userGroup, serverRunnable);
+    }
+
+    private class Command {
+        String program;
+        String command;
+        MasterServer.ServerRunnable serverRunnable;
     }
 }

@@ -98,6 +98,7 @@ public class MasterServer {
         }
 
         public void createDatabase(String databasePath, String databaseName, ServerRunnable serverRunnable) {
+            //todo what about deletedatabase or deletefile in general?
             this.databasePath = fixedPath(databasePath, databaseName);
             masterServerHandler.sendCommand("databasemanager", "createdatabase", this.databasePath, serverRunnable);
         }
