@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -38,6 +39,10 @@ public class MasterServerHandler {
         if (!MasterServer.serverConnected) {
             MasterServer.serverIP = IP;
             serverRunnables = new ArrayList<>();
+
+            commands = new ArrayList<>();
+            commandLooper();
+
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -48,14 +53,6 @@ public class MasterServerHandler {
                         if (serverRunnable != null && serverRunnable.onSuccess != null) {
                             serverRunnable.activity.runOnUiThread(serverRunnable.onSuccess);
                         }
-                        Thread thread = new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                commands = new ArrayList<>();
-                                commandSender();
-                            }
-                        });
-                        thread.start();
 
                         whileChatting();
                     } catch (EOFException eofException) {
@@ -190,6 +187,8 @@ public class MasterServerHandler {
         commands.add(commandClass);
     }
 
+    private boolean allSent = true;
+
     private void commandSender() {
         for (int i = 0; i < commands.size(); i++) {
             Command currentCommand = commands.get(i);
@@ -210,11 +209,25 @@ public class MasterServerHandler {
             }
             commands.remove(currentCommand);
         }
+        allSent = true;
+    }
+
+    private void commandLooper() {
+        if (allSent && MasterServer.serverConnected) {
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    allSent = false;
+                    commandSender();
+                }
+            });
+            thread.start();
+        }
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                commandSender();
+                commandLooper();
             }
         }, 1000);
     }
