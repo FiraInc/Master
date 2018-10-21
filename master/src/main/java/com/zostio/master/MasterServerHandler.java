@@ -121,7 +121,7 @@ public class MasterServerHandler {
 
                     for (int i = 0; i < serverRunnables.size(); i++) {
                         MasterServer.ServerRunnable serverRunnable = serverRunnables.get(i);
-                        if (serverRunnable.REQUEST_CODE.equals(req)) {
+                        if (serverRunnable.REQUEST_CODE.equalsIgnoreCase(req)) {
                             if (answer.toLowerCase().startsWith("error: ")) {
                                 serverRunnable.serverAnswer = answer.toLowerCase().split("error: ")[1];
                                 if (serverRunnable.onError != null) {
@@ -137,6 +137,9 @@ public class MasterServerHandler {
                                     showMessage("Received success, but serverAnswer.onSuccess is null: " + serverRunnable.REQUEST_CODE);
                                 }
                             }
+
+
+
                             if (!serverRunnable.doNotRemove) {
                                 serverRunnables.remove(i);
                                 Master.log("Removed from runnableList: " + serverRunnable.REQUEST_CODE);
