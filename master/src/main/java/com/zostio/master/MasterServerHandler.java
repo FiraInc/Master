@@ -134,7 +134,7 @@ public class MasterServerHandler {
                                 if (serverRunnable.onSuccess != null) {
                                     serverRunnable.activity.runOnUiThread(serverRunnable.onSuccess);
                                 }else {
-                                    showMessage("Received success, bud didn't know what to do!");
+                                    showMessage("Received success, but serverAnswer.onSuccess is null: " + serverRunnable.REQUEST_CODE);
                                 }
                             }
                             if (!serverRunnable.doNotRemove) {
