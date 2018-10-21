@@ -137,7 +137,9 @@ public class MasterServerHandler {
                                     showMessage("Received success, bud didn't know what to do!");
                                 }
                             }
-                            serverRunnables.remove(i);
+                            if (!serverRunnable.doNotRemove) {
+                                serverRunnables.remove(i);
+                            }
                         }else {
                             if (i == serverRunnables.size()-1) {
                                 showMessage("Request not found: " + req);

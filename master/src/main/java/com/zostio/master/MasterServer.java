@@ -146,6 +146,11 @@ public class MasterServer {
             masterServerHandler.sendCommand("databasemanager", "getvalue", databasePath + "#newInfo;" + path, serverRunnable);
         }
 
+        public void setRealTimeListener(ServerRunnable serverRunnable) {
+            serverRunnable.doNotRemove = true;
+            masterServerHandler.sendCommand("databasemanager", "realtimelistener", databasePath + "#newInfo;" + path, serverRunnable);
+        }
+
         public void setValue(String value, ServerRunnable serverRunnable) {
             String details = databasePath + "#newInfo;" + path + "#newInfo;" + value;
             masterServerHandler.sendCommand("databasemanager", "setvalue", details, serverRunnable);
@@ -159,6 +164,7 @@ public class MasterServer {
 
 
     public static class ServerRunnable {
+        public boolean doNotRemove = false;
         public String serverAnswer;
         public String REQUEST_CODE;
         public Runnable onSuccess;
