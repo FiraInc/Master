@@ -139,6 +139,9 @@ public class MasterServerHandler {
                             }
                             if (!serverRunnable.doNotRemove) {
                                 serverRunnables.remove(i);
+                                Master.log("Removed from runnableList: " + serverRunnable.REQUEST_CODE);
+                            }else {
+                                Master.log("Did not remove: " + serverRunnable.REQUEST_CODE);
                             }
                         }else {
                             if (i == serverRunnables.size()-1) {
