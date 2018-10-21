@@ -146,6 +146,7 @@ public class MasterServerHandler {
                             }else {
                                 Master.log("Did not remove: " + serverRunnable.REQUEST_CODE);
                             }
+                            Master.log(serverRunnable.REQUEST_CODE + " IS NOT " + req);
                         }else {
                             if (i == serverRunnables.size()-1) {
                                 showMessage("Request not found: " + req);
