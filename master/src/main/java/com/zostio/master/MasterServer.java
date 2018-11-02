@@ -2,7 +2,9 @@ package com.zostio.master;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 
+import java.io.File;
 import java.util.Random;
 
 public class MasterServer {
@@ -38,12 +40,6 @@ public class MasterServer {
 
     public static void sendCommand(String program, String command, String details, ServerRunnable serverRunnable) {
         masterServerHandler.sendCommand(program, command, details, serverRunnable);
-    }
-
-    public static class ServerCommands {
-        public static void stopServer(ServerRunnable serverRunnable) {
-            masterServerHandler.sendCommand("serverhandler", "stopserver", "", serverRunnable);
-        }
     }
 
     public static class UserData {
@@ -85,8 +81,29 @@ public class MasterServer {
     }
 
     public static class ServerManager {
+        //public static void checkUpdate();
         public static void closeServer(ServerRunnable serverRunnable) {
             masterServerHandler.sendCommand("serverhandler", "stopserver", "", serverRunnable);
+        }
+
+        public static void checkUpdate (ServerRunnable serverRunnable) {
+            masterServerHandler.sendCommand("serverhandler", "checkupdate", "", serverRunnable);
+        }
+
+        public static void updateServer (ServerRunnable serverRunnable) {
+            masterServerHandler.sendCommand("serverhandler", "updateserver", "", serverRunnable);
+        }
+
+        public static void getBuildNumber (ServerRunnable serverRunnable) {
+            masterServerHandler.sendCommand("serverhandler", "getbuild", "", serverRunnable);
+        }
+
+        public static void getVersion (ServerRunnable serverRunnable) {
+            masterServerHandler.sendCommand("serverhandler", "getversion", "", serverRunnable);
+        }
+
+        public static void restartServer (ServerRunnable serverRunnable) {
+            masterServerHandler.sendCommand("serverhandler", "restartserver", "", serverRunnable);
         }
     }
 
@@ -162,14 +179,54 @@ public class MasterServer {
         }
     }
 
+    public static class FileManager {
+        public static void sendFile(final String phonePath, String path, String fileName, final ServerRunnable serverRunnable) {
+            String endPath = fixedPath(path, fileName);
+            masterServerHandler.sendFile(phonePath, endPath, serverRunnable);
+        }
+
+        public static void requestFile(final String phonePath, String path, String fileName, final ServerRunnable serverRunnable){
+            String fixedPath = fixedPath(path, fileName);
+
+            File phoneFile = new File(phonePath);
+            if (phoneFile.exists()) {
+                phoneFile.delete();
+            }
+            phoneFile.mkdirs();
+
+            serverRunnable.details = fixedPath;
+            serverRunnable.REQUEST_CODE = serverRunnable.REQUEST_CODE.substring(0, 13);
+
+            masterServerHandler.sendCommand("filemanager", "requestfile", fixedPath, serverRunnable);
+        }
+
+        private static String fixedPath(String path, String fileName) {
+            String realPath = path;
+            if (path.endsWith("/")) {
+                realPath = realPath + fileName;
+            }else {
+                realPath = realPath + "/" + fileName;
+            }
+
+            return realPath;
+        }
+    }
+
 
     public static class ServerRunnable {
-        public boolean doNotRemove = false;
+        Activity activity;
+
         public String serverAnswer;
         public String REQUEST_CODE;
         public Runnable onSuccess;
         public Runnable onError;
-        Activity activity;
+
+        public int progressPercentage = 0;
+        public Runnable onProgress;
+
+        public String details;
+
+        public boolean doNotRemove = false;
 
         public ServerRunnable(Activity activity, String request) {
             this.activity = activity;
@@ -190,6 +247,10 @@ public class MasterServer {
 
         public void addOnError(Runnable onError) {
             this.onError = onError;
+        }
+
+        public void addOnProgress(Runnable onProgress) {
+            this.onProgress = onProgress;
         }
 
     }
