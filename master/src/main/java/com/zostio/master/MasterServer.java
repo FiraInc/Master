@@ -210,6 +210,10 @@ public class MasterServer {
 
             return realPath;
         }
+
+        public static void listFiles(String path, ServerRunnable serverRunnable) {
+            masterServerHandler.sendCommand("filemanager", "listfiles", path, serverRunnable);
+        }
     }
 
 
