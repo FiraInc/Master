@@ -33,7 +33,6 @@ public class MasterServerHandler {
     public void connectToServer(String IP, final MasterServer.ServerRunnable serverRunnable) {
         if (!MasterServer.serverConnected) {
             MasterServer.serverIP = IP;
-            commandLooper();
 
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -357,71 +356,63 @@ public class MasterServerHandler {
         commandClass.command = commandToSend;
         commandClass.serverRunnable = serverRunnable;
         commands.add(commandClass);
+        commandSender();
     }
 
-    private boolean allSent = true;
+    private boolean currentlySending = false;
 
     private void commandSender() {
-        for (int i = 0; i < commands.size(); i++) {
-            Command currentCommand = commands.get(i);
-            Boolean serverNotConnectedWarning = false;
-            while(!MasterServer.serverConnected) {
-                if (!serverNotConnectedWarning) {
-                    showMessage("Server not connected!");
-                    serverNotConnectedWarning = true;
-                }
-            }
-            try {
-                String message = currentCommand.serverRunnable.REQUEST_CODE + "#divider#" + currentCommand.command;
-                byte[] messageInBytes = message.getBytes("UTF-8");
-                String bytes = String.valueOf(messageInBytes.length);
-                int byteLength = bytes.length();
-                String zeros = "";
-                for (int b = byteLength; b < 10; b++) {
-                    zeros = zeros + "0";
-                }
-
-                message = "10"+zeros+bytes+message;
-                byte[] b = message.getBytes(StandardCharsets.UTF_8);
-
-                output.write(b);
-                output.flush();
-                showMessage("Command sent: " + currentCommand.command);
-            }catch (IOException ioException) {
-                showMessage("Error sending command: " + currentCommand.command);
-                ioException.printStackTrace();
-            }
-            commands.remove(currentCommand);
-        }
-        allSent = true;
-    }
-
-    private Handler commandHandler;
-    private Runnable commandRunnable;
-
-    private void commandLooper() {
-        if (commandHandler == null) {
-            commandHandler = new Handler();
-            commandRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    commandLooper();
-                }
-            };
-        }
-
-        if (allSent && MasterServer.serverConnected) {
+        if (!currentlySending && MasterServer.serverConnected) {
+            currentlySending = true;
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    allSent = false;
-                    commandSender();
+                    for (int i = 0; i < commands.size(); i++) {
+                        Command currentCommand = commands.get(i);
+                        Boolean serverNotConnectedWarning = false;
+                        while(!MasterServer.serverConnected) {
+                            if (!serverNotConnectedWarning) {
+                                showMessage("Server not connected!");
+                                serverNotConnectedWarning = true;
+                            }
+                        }
+                        try {
+                            String message = currentCommand.serverRunnable.REQUEST_CODE + "#divider#" + currentCommand.command;
+                            byte[] messageInBytes = message.getBytes("UTF-8");
+                            String bytes = String.valueOf(messageInBytes.length);
+                            int byteLength = bytes.length();
+                            String zeros = "";
+                            for (int b = byteLength; b < 10; b++) {
+                                zeros = zeros + "0";
+                            }
+
+                            message = "10"+zeros+bytes+message;
+                            byte[] b = message.getBytes(StandardCharsets.UTF_8);
+
+                            output.write(b);
+                            output.flush();
+                            showMessage("Command sent: " + currentCommand.command);
+                        }catch (IOException ioException) {
+                            showMessage("Error sending command: " + currentCommand.command);
+                            ioException.printStackTrace();
+                        }
+                        commands.remove(currentCommand);
+                    }
+                    if (commands.size() > 0) {
+                        commandSender();
+                    }else {
+                        currentlySending = false;
+                    }
                 }
             });
             thread.start();
+        }else {
+            if (commands.size() > 0) {
+                commandSender();
+            }else {
+                currentlySending = false;
+            }
         }
-
-        commandHandler.postDelayed(commandRunnable, 50);
     }
 
     public void showMessage(String message) {
