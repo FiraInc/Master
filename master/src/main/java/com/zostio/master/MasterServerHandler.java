@@ -408,6 +408,10 @@ public class MasterServerHandler {
             thread.start();
         }else {
             if (commands.size() > 0) {
+                Long currentMillis = System.currentTimeMillis();
+                while (System.currentTimeMillis() < currentMillis + 100) {
+
+                }
                 commandSender();
             }else {
                 currentlySending = false;
