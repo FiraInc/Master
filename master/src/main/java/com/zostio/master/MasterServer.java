@@ -11,7 +11,7 @@ import java.util.Random;
 
 public class MasterServer {
 
-    public static MasterServerHandler masterServerHandler;
+    public static MasterServerHandler masterServerHandler = new MasterServerHandler();
     public static String serverIP = "";
 
     public static Boolean serverConnected = false;
@@ -25,9 +25,6 @@ public class MasterServer {
     }
 
     public static void connectToServer(String IP, final ServerRunnable serverRunnable) {
-        if (masterServerHandler == null) {
-            masterServerHandler = new MasterServerHandler();
-        }
         if (!serverConnected) {
             masterServerHandler.connectToServer(IP, serverRunnable);
         }else {
