@@ -19,11 +19,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class MasterServerHandler {
-    protected static Socket connection;
+    protected Socket connection;
     private InputStream input;
     private OutputStream output;
 
-    private ArrayList<MasterServer.ServerRunnable> serverRunnables;
+    protected ArrayList<MasterServer.ServerRunnable> serverRunnables;
     private ArrayList<Command> commands;
 
     MasterServerHandler() {

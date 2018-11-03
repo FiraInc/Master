@@ -3,8 +3,10 @@ package com.zostio.master;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 
 import java.io.File;
+import java.net.SocketException;
 import java.util.Random;
 
 public class MasterServer {
@@ -24,10 +26,6 @@ public class MasterServer {
 
     public static void connectToServer(String IP) {
         connectToServer(IP, null);
-    }
-
-    public static boolean isServerConnected () {
-        return MasterServerHandler.connection.isBound();
     }
 
     public static void connectToServer(String IP, final ServerRunnable serverRunnable) {
@@ -108,6 +106,20 @@ public class MasterServer {
 
         public static void restartServer (ServerRunnable serverRunnable) {
             masterServerHandler.sendCommand("serverhandler", "restartserver", "", serverRunnable);
+        }
+
+        public static void checkServerConnection (final ServerRunnable serverRunnable) {
+            masterServerHandler.sendCommand("serverhandler", "checkconnection", "", serverRunnable);
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (masterServerHandler.serverRunnables.contains(serverRunnable)) {
+                        serverConnected = false;
+                        serverRunnable.activity.runOnUiThread(serverRunnable.onError);
+                    }
+                }
+            }, 5000);
         }
     }
 
