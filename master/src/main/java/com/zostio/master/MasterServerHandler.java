@@ -23,8 +23,8 @@ public class MasterServerHandler {
     private InputStream input;
     private OutputStream output;
 
-    protected ArrayList<MasterServer.ServerRunnable> serverRunnables;
-    private ArrayList<Command> commands;
+    protected ArrayList<MasterServer.ServerRunnable> serverRunnables = new ArrayList<>();;
+    private ArrayList<Command> commands = new ArrayList<>();;
 
     MasterServerHandler() {
 
@@ -33,9 +33,6 @@ public class MasterServerHandler {
     public void connectToServer(String IP, final MasterServer.ServerRunnable serverRunnable) {
         if (!MasterServer.serverConnected) {
             MasterServer.serverIP = IP;
-            serverRunnables = new ArrayList<>();
-
-            commands = new ArrayList<>();
             commandLooper();
 
             Thread thread = new Thread(new Runnable() {
