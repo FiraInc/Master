@@ -26,6 +26,10 @@ public class MasterServer {
         connectToServer(IP, null);
     }
 
+    public static boolean isServerConnected () {
+        return MasterServerHandler.connection.isBound();
+    }
+
     public static void connectToServer(String IP, final ServerRunnable serverRunnable) {
         if (masterServerHandler == null) {
             masterServerHandler = new MasterServerHandler();

@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class MasterServerHandler {
-    private Socket connection;
+    protected static Socket connection;
     private InputStream input;
     private OutputStream output;
 
