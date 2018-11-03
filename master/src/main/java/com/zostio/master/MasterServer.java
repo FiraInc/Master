@@ -20,10 +20,6 @@ public class MasterServer {
 
     }
 
-    public static void setup(Context context) {
-        masterServerHandler = new MasterServerHandler();
-    }
-
     public static void connectToServer(String IP) {
         connectToServer(IP, null);
     }
@@ -117,9 +113,11 @@ public class MasterServer {
                     if (masterServerHandler.serverRunnables.contains(serverRunnable)) {
                         serverConnected = false;
                         serverRunnable.activity.runOnUiThread(serverRunnable.onError);
+                    }else {
+                        serverRunnable.activity.runOnUiThread(serverRunnable.onSuccess);
                     }
                 }
-            }, 5000);
+            }, 1500);
         }
     }
 
