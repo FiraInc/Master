@@ -194,8 +194,12 @@ public class MasterServer {
             }
             phoneFile.mkdirs();
 
+            MasterCrypto masterCrypto = new MasterCrypto();
+            String salt1 = masterCrypto.createSalt();
+            String salt2 = masterCrypto.createSalt();
+
             serverRunnable.details = fixedPath;
-            serverRunnable.REQUEST_CODE = serverRunnable.REQUEST_CODE.substring(0, 13);
+            serverRunnable.REQUEST_CODE = (salt1 + salt2).substring(0, 13);
 
             masterServerHandler.sendCommand("filemanager", "requestfile", fixedPath, serverRunnable);
         }
@@ -213,6 +217,14 @@ public class MasterServer {
 
         public static void listFiles(String path, ServerRunnable serverRunnable) {
             masterServerHandler.sendCommand("filemanager", "listfiles", path, serverRunnable);
+        }
+
+        public static void listFolders(String path, ServerRunnable serverRunnable) {
+            masterServerHandler.sendCommand("filemanager", "listfolders", path, serverRunnable);
+        }
+
+        public static void listFilesAndFolders(String path, ServerRunnable serverRunnable) {
+            masterServerHandler.sendCommand("filemanager", "listfilesfolders", path, serverRunnable);
         }
     }
 

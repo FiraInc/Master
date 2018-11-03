@@ -111,7 +111,6 @@ public class MasterServerHandler {
 
     public void whileChatting() throws IOException {
         do {
-            showMessage("Received Answer");
             byte[] dataInfo = new byte[2];
             input.read(dataInfo);
             String dataType = new String(dataInfo, StandardCharsets.UTF_8);
