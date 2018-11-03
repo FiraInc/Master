@@ -288,7 +288,8 @@ public class MasterServerHandler {
 
                     bytes = zeros + bytes;
 
-                    String pathLength = String.valueOf(endPath.length());
+                    byte[] endPathInBytes = endPath.getBytes("UTF-8");
+                    String pathLength = String.valueOf(endPathInBytes.length);
                     zeros = "";
 
                     for (int i = pathLength.length(); i < 4; i++) {
@@ -375,7 +376,8 @@ public class MasterServerHandler {
             }
             try {
                 String message = currentCommand.serverRunnable.REQUEST_CODE + "#divider#" + currentCommand.command;
-                String bytes = String.valueOf(message.length());
+                byte[] messageInBytes = message.getBytes("UTF-8");
+                String bytes = String.valueOf(messageInBytes.length);
                 int byteLength = bytes.length();
                 String zeros = "";
                 for (int b = byteLength; b < 10; b++) {
